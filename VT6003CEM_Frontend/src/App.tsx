@@ -1,11 +1,15 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme, Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import Navbar from './components/navbar';
-import HomePage from './pages/homePage';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
 import AccountInfoPage from './pages/AccountInfoPage';
+import OperatorPage from './pages/OperatorPage';
+import InboxPage from './pages/InboxPage';
+import HotelListPage from './pages/HotelListPage'; // Import the new page
 import './App.css';
 
 const lightTheme = createTheme({
@@ -39,12 +43,20 @@ function App() {
       <ThemeProvider theme={lightTheme}>
         <CssBaseline />
         <Router>
-          <Navbar/>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/account-info" element={<AccountInfoPage />} />
-          </Routes>
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Navbar />
+            <Box component="main" sx={{ flexGrow: 1 }}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/account-info" element={<AccountInfoPage />} />
+                <Route path="/operator" element={<OperatorPage />} />
+                <Route path="/inbox" element={<InboxPage />} />
+                <Route path="/hotels" element={<HotelListPage />} />
+              </Routes>
+            </Box>
+            <Footer />
+          </Box>
         </Router>
       </ThemeProvider>
     </GoogleOAuthProvider>

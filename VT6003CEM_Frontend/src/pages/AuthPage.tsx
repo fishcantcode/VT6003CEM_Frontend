@@ -8,7 +8,6 @@ import {
   Paper, 
   InputAdornment,
   IconButton,
-  Link,
   CircularProgress,
   Alert,
   Tabs,
@@ -46,11 +45,8 @@ const AuthPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      // Here you would typically send the credential to your backend for verification
       console.log('Google auth success:', credentialResponse);
       
-      // For now, we'll just redirect to home
-      // In a real app, you would verify the token with your backend
       navigate('/');
     } catch (error: any) {
       setError('Failed to authenticate with Google. Please try again.');
@@ -71,13 +67,9 @@ const AuthPage: React.FC = () => {
     
     try {
       if (isLogin) {
-        // Handle login
-        // This is just a placeholder - authentication is handled by the backend
-        // You would typically call an API endpoint here
         console.log('Login attempt with:', { email: formData.email });
         navigate('/');
       } else {
-        // Handle signup
         const userData: SignupData = {
           name: formData.name,
           email: formData.email,
@@ -87,7 +79,6 @@ const AuthPage: React.FC = () => {
         };
         
         await authService.signup(userData);
-        // After successful signup, redirect to home or show success message
         navigate('/');
       }
     } catch (error: any) {
@@ -130,7 +121,7 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="xs" sx={{ mb: 18 }}>
       <Box
         sx={{
           marginTop: 8,
@@ -257,43 +248,55 @@ const AuthPage: React.FC = () => {
               variant="contained"
               color="primary"
               disabled={isLoading}
-              sx={{ mt: 2, mb: 2 }}
+              sx={{ mt: 3, mb: 3 }}
             >
               {isLoading ? <CircularProgress size={24} /> : isLogin ? 'Sign In' : 'Sign Up'}
             </Button>
 
-            <Box sx={{ textAlign: 'center', my: 2 }}>
-              <Link 
-                component="button" 
-                variant="body2"
-                onClick={() => setIsLogin(!isLogin)}
-                sx={{ color: '#085c54' }}
-              >
-                {isLogin 
-                  ? "Don't have an account? Sign Up" 
-                  : 'Already have an account? Sign In'}
-              </Link>
-            </Box>
+            
 
             
-            <Divider sx={{ my: 3 }}>
-              <Typography variant="body2" color="text.secondary">OR</Typography>
-            </Divider>
-            
-            <Box sx={{ textAlign: 'center', mb: 2 }}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap
-                text={isLogin ? 'signin_with' : 'signup_with'}
-                shape="rectangular"
-                width="100%"
-                size="large"
-                type="standard"
-                theme="outline"
-                logo_alignment="left"
-              />
-            </Box>
+            {/* Google Sign-In (always show on sign-in tab) */}
+            {isLogin && (
+              <Box sx={{ textAlign: 'center', mb: 2 }}>
+                <Divider sx={{ my: 3 }}>
+                  <Typography variant="body2" color="text.secondary">OR</Typography>
+                </Divider>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  text="signin_with"
+                  shape="rectangular"
+                  width="100%"
+                  size="large"
+                  type="standard"
+                  theme="outline"
+                  logo_alignment="left"
+                />
+              </Box>
+            )}
+
+            {/* Google Sign-Up (hide if operator is selected) */}
+            {!isLogin && !isOperator && (
+              <Box sx={{ textAlign: 'center', mb: 2 }}>
+                <Divider sx={{ my: 3 }}>
+                  <Typography variant="body2" color="text.secondary">OR</Typography>
+                </Divider>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  text="signup_with"
+                  shape="rectangular"
+                  width="100%"
+                  size="large"
+                  type="standard"
+                  theme="outline"
+                  logo_alignment="left"
+                />
+              </Box>
+            )}
           </Box>
         </Paper>
       </Box>

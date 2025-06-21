@@ -38,6 +38,27 @@ const Navbar: React.FC = () => {
         >
           <AccountCircleIcon />
         </IconButton> */}
+        <Button 
+          color="inherit" 
+          component={RouterLink} 
+          to="/operator"
+        >
+          Operator Page
+        </Button>
+        <Button 
+          color="inherit" 
+          component={RouterLink} 
+          to="/inbox"
+        >
+          Inbox
+        </Button>
+        <Button 
+          color="inherit" 
+          component={RouterLink} 
+          to="/account-info"
+        >
+          Account Info
+        </Button>
         <Box sx={{ flexGrow: 1 }} /> 
 
         <Button 
