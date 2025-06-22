@@ -119,7 +119,10 @@ const AuthPage: React.FC = () => {
           password: formData.password
         };
         
-        await authService.login(loginData);
+        const loggedInUser = await authService.login(loginData);
+        if (loggedInUser && loggedInUser.token) {
+          console.log('Login Successful! Token:', loggedInUser.token);
+        }
         window.dispatchEvent(new Event('authChange'));
         navigate('/');
       } else {

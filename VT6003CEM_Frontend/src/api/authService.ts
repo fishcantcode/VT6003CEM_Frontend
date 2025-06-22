@@ -1,6 +1,7 @@
 import axios from 'axios';
+import type { User } from '../types/auth';
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 axios.interceptors.request.use(
   (config) => {
@@ -45,12 +46,12 @@ export interface AuthResponse {
     id: number;
     username: string;
     email: string;
+    role: 'user' | 'operator' | 'admin';
     profile: {
       firstName: string;
       lastName: string;
       bio?: string;
     };
-    role: 'user' | 'operator';
     isEmployee: boolean;
     avatarImage?: string;
     createdAt: string;
@@ -97,19 +98,21 @@ export const authService = {
           'Content-Type': 'application/json',
         },
       });
-      console.log('Login successful, received data:', response.data);
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        console.log('Token stored in localStorage:', response.data.token);
+        const roleData = await this.getUserRole();
+        const userWithRole = {
+          ...response.data.user,
+          role: roleData.role,
+        };
+        localStorage.setItem('user', JSON.stringify(userWithRole));
         window.dispatchEvent(new Event('authChange'));
-      } else {
-        console.error('Login response did not contain a token.');
       }
       
       return response.data;
     } catch (error: any) {
+      localStorage.removeItem('token');
       console.error('Login error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || 'Login failed. Please try again.');
     }
@@ -151,6 +154,24 @@ export const authService = {
         error.response?.data?.error || 
         'Registration failed. Please try again.'
       );
+    }
+  },
+
+  async getUserRole(): Promise<{ role: 'user' | 'operator' | 'admin' }> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/user/role`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch user role:', error);
+      throw error;
+    }
+  },
+
+  updateCurrentUser(updates: Partial<User>): void {
+    const currentUser = this.getCurrentUser();
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...updates };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   },
 

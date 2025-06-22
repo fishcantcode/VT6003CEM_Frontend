@@ -10,6 +10,9 @@ import AccountInfoPage from './pages/AccountInfoPage';
 import OperatorPage from './pages/OperatorPage';
 import InboxPage from './pages/InboxPage';
 import HotelListPage from './pages/HotelListPage'; // Import the new page
+import ViewAllHotelsPage from './pages/ViewAllHotelsPage';
+import MyFavoritesPage from './pages/MyFavoritesPage';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 const lightTheme = createTheme({
@@ -49,10 +52,22 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/view-hotels" element={<ViewAllHotelsPage />} />
                 <Route path="/account-info" element={<AccountInfoPage />} />
-                <Route path="/operator" element={<OperatorPage />} />
-                <Route path="/inbox" element={<InboxPage />} />
                 <Route path="/hotels" element={<HotelListPage />} />
+
+                {/* Protected Routes */}
+                <Route path="/" element={<ProtectedRoute allowedRoles={['user', 'operator']} />}>
+                  <Route path="/inbox" element={<InboxPage />} />
+                </Route>
+
+                <Route path="/" element={<ProtectedRoute allowedRoles={['user']} />}>
+                  <Route path="/my-favorites" element={<MyFavoritesPage />} />
+                </Route>
+
+                <Route path="/" element={<ProtectedRoute allowedRoles={['operator']} />}>
+                  <Route path="/operator" element={<OperatorPage />} />
+                </Route>
               </Routes>
             </Box>
             <Footer />

@@ -1,67 +1,52 @@
 import React, { useState } from 'react';
-import type { Hotel } from '../mock/hotelData';
-import { Box, Card, CardContent, CardMedia, Typography, IconButton, Chip } from '@mui/material';
-import {
-  Favorite,
-  FavoriteBorder,
-  ChevronLeft,
-  ChevronRight,
-  Pool,
-  HotTub,
-} from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import type { HotelInfo } from '../types/hotel';
+import { Box, Card, CardContent, CardMedia, Typography, IconButton, Rating } from '@mui/material';
+import { Favorite, FavoriteBorder, LocationOn, Star } from '@mui/icons-material';
+import hotelImage from '../assets/hotel.jpg';
 
 interface HotelCardProps {
-  hotel: Hotel;
+  hotel: HotelInfo;
 }
 
 const HotelCard: React.FC<HotelCardProps> = ({ hotel }) => {
   const [isFavorited, setIsFavorited] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % hotel.images.length);
-  };
-
-  const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + hotel.images.length) % hotel.images.length);
-  };
 
   const handleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setIsFavorited(!isFavorited);
   };
 
   return (
-    <Card sx={{ display: 'flex', borderRadius: 4, my: 2, boxShadow: 3, cursor: 'pointer', '&:hover': { boxShadow: 6 } }}>
+    <Card
+      sx={{
+        display: 'flex', 
+        borderRadius: 4, 
+        my: 2, 
+        boxShadow: 3, 
+        textDecoration: 'none',
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        '&:hover': { 
+          transform: 'translateY(-4px)', 
+          boxShadow: 6 
+        }
+      }}
+    >
       {/* Image Section */}
       <Box sx={{ position: 'relative', width: { xs: '100px', sm: '300px' }, flexShrink: 0 }}>
         <CardMedia
           component="img"
           sx={{ height: '100%', width: '100%' }}
-          image={hotel.images[currentImageIndex]}
+          image={hotelImage}
           alt={hotel.name}
         />
-        {hotel.isAd && (
-          <Chip label="Ad" size="small" sx={{ position: 'absolute', bottom: 8, left: 8, backgroundColor: 'rgba(0,0,0,0.7)', color: 'white', zIndex: 1 }} />
-        )}
         <IconButton
           onClick={handleFavorite}
           sx={{ position: 'absolute', top: 8, right: 8, backgroundColor: 'white', '&:hover': { backgroundColor: '#f0f0f0' }, zIndex: 1 }}
         >
           {isFavorited ? <Favorite color="error" /> : <FavoriteBorder />}
         </IconButton>
-        {hotel.images.length > 1 && (
-          <>
-            <IconButton onClick={handlePrevImage} sx={{ position: 'absolute', top: '50%', left: 8, transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)'} }}>
-              <ChevronLeft />
-            </IconButton>
-            <IconButton onClick={handleNextImage} sx={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)'} }}>
-              <ChevronRight />
-            </IconButton>
-          </>
-        )}
       </Box>
 
       {/* Content Section */}
@@ -69,20 +54,27 @@ const HotelCard: React.FC<HotelCardProps> = ({ hotel }) => {
         <Typography component="div" variant="h5" fontWeight="bold">
           {hotel.name}
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary" component="div">
-          {hotel.location}
-        </Typography>
-        <Typography variant="body1" fontWeight="bold" sx={{ my: 1 }}>
-          {hotel.descriptionTitle}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {hotel.description}
-        </Typography>
-        {hotel.isFullyRefundable && (
-          <Typography variant="body2" color="success.main" sx={{ mt: 1, fontWeight: 'bold' }}>
-            Fully refundable
+        <Box display="flex" alignItems="center" mb={1}>
+          <Rating
+            value={hotel.rating}
+            precision={0.1}
+            readOnly
+            size="small"
+            emptyIcon={<Star style={{ opacity: 0.55 }} fontSize="inherit" />}
+          />
+          <Typography variant="body2" color="text.secondary" ml={0.5}>
+            {hotel.rating?.toFixed(1)}
           </Typography>
-        )}
+          <Typography variant="body2" color="text.secondary" ml={1}>
+            ({hotel.user_ratings_total} reviews)
+          </Typography>
+        </Box>
+        <Box display="flex" alignItems="center">
+          <LocationOn color="action" fontSize="small" />
+          <Typography variant="subtitle1" color="text.secondary" component="div">
+            {hotel.vicinity || hotel.formatted_address}
+          </Typography>
+        </Box>
       </CardContent>
     </Card>
   );

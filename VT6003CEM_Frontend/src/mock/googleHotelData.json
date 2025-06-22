@@ -1,0 +1,58 @@
+{
+  "html_attributions": [],
+  "results": [
+    {
+      "business_status": "OPERATIONAL",
+      "formatted_address": "香港北角北角邨里1號",
+      "geometry": {
+        "location": {
+          "lat": 22.292768,
+          "lng": 114.1989849
+        },
+        "viewport": {
+          "northeast": {
+            "lat": 22.2939496298927,
+            "lng": 114.200405229893
+          },
+          "southwest": {
+            "lat": 22.2912499701073,
+            "lng": 114.197705570107
+          }
+        }
+      },
+      "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png",
+      "icon_background_color": "#909CE1",
+      "icon_mask_base_uri": "https://maps.gstatic.com/mapfiles/place_api/icons/v2/hotel_pinlet",
+      "name": "香港維港凱悅尚萃酒店",
+      "opening_hours": {
+        "open_now": true
+      },
+      "photos": [
+        {
+          "height": 2304,
+          "html_attributions": [
+            "<a href=\"https://maps.google.com/maps/contrib/105113568045891190502\">Hyatt Centric Victoria Harbour Hong Kong</a>"
+          ],
+          "photo_reference": "AXQCQNSBagSoqO4iNOlTNm4W_3Os4i-GPOG_guG9xMcYwQ1nCNHkdICsZj5UY5RscOP-P3E1AC8rkdfMwtqFSqF9yg5FwAqwLXC_oYEcSyfEIOwR5ilYfIcPx6mS1rPJtXUxT8Hxuts7RU5DQS7i4ZjedQQQPTCmWX6QYtIiq9tKALqbuXSYIoOb4dMizLvZThVgrcamP9zGt7b2rcGRsnJE8ZAZ5yQliz5-omI3t8Vc1ptzj_drLQvmfA_dLlmyr_huYMDEOn4Sxd3UKuYz1BEeJ3WL0SgKhh3YMcYUB01ZShe1ZlXPTCE",
+          "width": 2880
+        }
+      ],
+      "place_id": "ChIJscNTnAMBBDQRXjP_mclQXXA",
+      "plus_code": {
+        "compound_code": "75VX+4H 北角 香港",
+        "global_code": "7PJP75VX+4H"
+      },
+      "rating": 4.2,
+      "reference": "ChIJscNTnAMBBDQRXjP_mclQXXA",
+      "types": [
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "user_ratings_total": 3087,
+      "vicinity": "1 North Point Estate Ln, North Point, Hong Kong",
+      "status": "available"
+    }
+  ],
+  "status": "OK"
+}

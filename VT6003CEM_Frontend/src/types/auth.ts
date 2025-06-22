@@ -3,6 +3,15 @@ export interface User {
   email: string;
   firstname?: string;
   lastname?: string;
-  isOperator: boolean;
   token: string;
+  profile?: {
+    firstName?: string;
+    lastName?: string;
+    bio?: string;
+  };
+  role: 'user' | 'operator' | 'admin';
+  isEmployee: boolean;
+  avatarImage?: string;
+  createdAt: string;
+  updatedAt: string;
 }

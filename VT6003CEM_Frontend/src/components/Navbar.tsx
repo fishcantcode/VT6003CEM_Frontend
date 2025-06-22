@@ -8,9 +8,10 @@ import {
   Avatar, 
   Typography, 
   Menu, 
-  MenuItem 
+  MenuItem
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import brandLogo from '../assets/brandLogo.png';
 import { authService } from '../api/authService';
@@ -23,22 +24,30 @@ const Navbar: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [avatarDataUrl, setAvatarDataUrl] = useState<string>('');
 
-  // Check if user is logged in on component mount and on auth changes
+ 
   useEffect(() => {
     const checkAuth = async () => {
       const isAuthenticated = authService.isAuthenticated();
       setIsLoggedIn(isAuthenticated);
       
       if (isAuthenticated) {
-        const userData = authService.getCurrentUser();
-        setUser(userData);
-        
-        // Load avatar data URL
         try {
+          const userData = authService.getCurrentUser();
+          if (userData && !userData.role) {
+            const roleData = await authService.getUserRole();
+            const updatedUser = { ...userData, role: roleData.role };
+            authService.updateCurrentUser(updatedUser);
+            setUser(updatedUser);
+          } else {
+            setUser(userData);
+          }
+
           const avatarUrl = await authService.getAvatarDataUrl();
           setAvatarDataUrl(avatarUrl);
         } catch (error) {
-          console.error('Failed to load avatar:', error);
+          console.error('Failed to load user data:', error);
+          authService.logout();
+          navigate('/auth');
         }
       } else {
         setUser(null);
@@ -48,7 +57,6 @@ const Navbar: React.FC = () => {
     
     checkAuth();
     
-    // Listen for auth state changes (e.g., login/logout from other tabs or within the same tab)
     const handleAuthChange = () => checkAuth();
     window.addEventListener('storage', handleAuthChange);
     window.addEventListener('authChange', handleAuthChange);
@@ -57,7 +65,7 @@ const Navbar: React.FC = () => {
       window.removeEventListener('storage', handleAuthChange);
       window.removeEventListener('authChange', handleAuthChange);
     };
-  }, []);
+  }, [navigate]);
 
   const handleAccountMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -109,10 +117,20 @@ const Navbar: React.FC = () => {
           />
         </IconButton>
 
+        {/* Hotels button - Always visible */}
+        <Button 
+          color="inherit" 
+          component={RouterLink} 
+          to="/view-hotels"
+          sx={{ mr: 1 }}
+        >
+          Hotels
+        </Button>
+        
         {/* Navigation Buttons - Only show if logged in */}
         {isLoggedIn && (
           <>
-            {user?.isOperator && (
+            {user?.role === 'operator' && (
               <Button 
                 color="inherit" 
                 component={RouterLink} 
@@ -198,6 +216,15 @@ const Navbar: React.FC = () => {
               >
                 My Account
               </MenuItem>
+              {user.role === 'user' && (
+                <MenuItem 
+                  component={RouterLink} 
+                  to="/my-favorites" 
+                  onClick={handleClose}
+                >
+                  My Favorites
+                </MenuItem>
+              )}
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </Box>
