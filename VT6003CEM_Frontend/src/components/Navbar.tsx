@@ -21,30 +21,41 @@ const Navbar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string>('');
 
   // Check if user is logged in on component mount and on auth changes
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const isAuthenticated = authService.isAuthenticated();
       setIsLoggedIn(isAuthenticated);
       
       if (isAuthenticated) {
         const userData = authService.getCurrentUser();
         setUser(userData);
+        
+        // Load avatar data URL
+        try {
+          const avatarUrl = await authService.getAvatarDataUrl();
+          setAvatarDataUrl(avatarUrl);
+        } catch (error) {
+          console.error('Failed to load avatar:', error);
+        }
       } else {
         setUser(null);
+        setAvatarDataUrl('');
       }
     };
     
     checkAuth();
     
     // Listen for auth state changes (e.g., login/logout from other tabs or within the same tab)
-    window.addEventListener('storage', checkAuth);
-    window.addEventListener('authChange', checkAuth);
+    const handleAuthChange = () => checkAuth();
+    window.addEventListener('storage', handleAuthChange);
+    window.addEventListener('authChange', handleAuthChange);
 
     return () => {
-      window.removeEventListener('storage', checkAuth);
-      window.removeEventListener('authChange', checkAuth);
+      window.removeEventListener('storage', handleAuthChange);
+      window.removeEventListener('authChange', handleAuthChange);
     };
   }, []);
 
@@ -150,7 +161,8 @@ const Navbar: React.FC = () => {
               aria-controls="menu-appbar"
               aria-haspopup="true"
             >
-              <Avatar 
+              <Avatar
+                src={avatarDataUrl || undefined}
                 sx={{ 
                   bgcolor: 'white', 
                   color: '#085c54',
@@ -158,8 +170,9 @@ const Navbar: React.FC = () => {
                   height: 36,
                   fontSize: '1rem'
                 }}
+                alt={getUserDisplayName(user)}
               >
-                {getUserInitials(user) || <AccountCircleIcon />}
+                {!avatarDataUrl && (getUserInitials(user) || <AccountCircleIcon />)}
               </Avatar>
             </IconButton>
             

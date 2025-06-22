@@ -22,7 +22,7 @@ const InboxPage: React.FC = () => {
   const [messageInput, setMessageInput] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
-  // Toggle between user and operator view
+ 
   const toggleRole = () => {
     setRole(prev => prev === 'user' ? 'operator' : 'user');
     setSelectedHotelId('');
@@ -30,17 +30,15 @@ const InboxPage: React.FC = () => {
     setReplyingTo(null);
   };
 
-  // Format timestamp to a readable format
   const formatTime = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();
   };
 
-  // Handle sending a new message or a reply
   const handleSend = () => {
     if (!selectedHotelId || !messageInput.trim()) return;
 
     if (replyingTo) {
-      // This is a reply
+ 
       const originalMessage = messages.find(m => m.id === replyingTo);
       if (!originalMessage) return;
 
@@ -48,14 +46,13 @@ const InboxPage: React.FC = () => {
         id: Date.now().toString(),
         hotelId: originalMessage.hotelId,
         hotelName: originalMessage.hotelName,
-        sender: role, // The current user is sending the reply
+        sender: role, 
         content: messageInput,
         timestamp: Date.now(),
         replyTo: replyingTo
       };
       setMessages(prev => [...prev, reply]);
     } else {
-      // This is a new message
       const hotel = mockHotels.find(h => h.id === selectedHotelId);
       if (!hotel) return;
 
@@ -75,7 +72,7 @@ const InboxPage: React.FC = () => {
   };
 
 
-  // Handle clicking the reply button
+ 
   const handleReply = (messageId: string) => {
     const messageToReply = messages.find(m => m.id === messageId);
     if (messageToReply) {
@@ -86,14 +83,14 @@ const InboxPage: React.FC = () => {
     }
   };
 
-  // Get messages for the selected hotel, sorted by timestamp
+ 
   const hotelMessages = selectedHotelId
     ? messages
         .filter(msg => msg.hotelId === selectedHotelId)
         .sort((a, b) => a.timestamp - b.timestamp)
     : [];
 
-  // Get all hotels that have messages
+ 
   const hotelsWithMessages = Array.from(
     new Set(messages.map(msg => msg.hotelId))
   ).map(id => mockHotels.find(h => h.id === id)).filter(Boolean);

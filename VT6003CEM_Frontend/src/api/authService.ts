@@ -139,7 +139,6 @@ export const authService = {
       }
       return response.data;
     } catch (error: any) {
-      // Surface backend field errors if present
       if (error.response?.data?.errors) {
         const fieldErrors = error.response.data.errors;
         throw new Error(JSON.stringify({
@@ -198,10 +197,17 @@ export const authService = {
         },
       });
 
-      // Update user in localStorage with new data
-      const updatedUser = response.data.user;
+ 
+      const updatedUser = response.data;
       const currentUser = this.getCurrentUser();
-      const mergedUser = { ...currentUser, ...updatedUser };
+      const mergedUser = { 
+        ...currentUser, 
+        ...updatedUser,
+        profile: {
+          ...currentUser?.profile,
+          ...updatedUser.profile
+        }
+      };
       localStorage.setItem('user', JSON.stringify(mergedUser));
       window.dispatchEvent(new Event('authChange'));
 
@@ -209,6 +215,41 @@ export const authService = {
     } catch (error: any) {
       console.error('Update user profile error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || 'Failed to update user profile.');
+    }
+  },
+
+  getAvatarUrl(userId: number) {
+    return `${API_BASE_URL}/user/${userId}/avatar`;
+  },
+
+  /**
+   * Get the avatar URL for the current logged-in user.
+   */
+  getOwnAvatarUrl() {
+    return `${API_BASE_URL}/user/avatar`;
+  },
+
+  /**
+   * Fetch the current user's avatar as a data URL for direct display in the UI.
+   * This handles the case where the API returns the image directly rather than a URL.
+   */
+  async getAvatarDataUrl(): Promise<string> {
+    try {
+ 
+      const response = await axios.get(`${API_BASE_URL}/user/avatar`, {
+        responseType: 'blob'
+      });
+      
+ 
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(response.data);
+      });
+    } catch (error) {
+      console.error('Failed to load avatar:', error);
+      return ''; // Return empty string on error
     }
   },
 
@@ -222,6 +263,15 @@ export const authService = {
           'Content-Type': 'multipart/form-data',
         },
       });
+
+ 
+      const currentUser = this.getCurrentUser();
+      if (currentUser) {
+        const avatarUrl = this.getOwnAvatarUrl() + `?${Date.now()}`; // cache busting
+        const updatedUser = { ...currentUser, avatarImage: avatarUrl };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event('authChange'));
+      }
 
       return response.data;
     } catch (error: any) {

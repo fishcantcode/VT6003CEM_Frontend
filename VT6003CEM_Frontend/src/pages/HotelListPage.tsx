@@ -17,13 +17,13 @@ import HotelCard from '../components/HotelCard';
 const HotelListPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // State for search fields
+ 
   const [location, setLocation] = useState(searchParams.get('search') || '');
   const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') || '');
   const [checkOut, setCheckOut] = useState(searchParams.get('checkOut') || '');
   const [guests, setGuests] = useState(searchParams.get('guests') || '2');
 
-  // Update state when URL search params change
+ 
   useEffect(() => {
     setLocation(searchParams.get('search') || '');
     setCheckIn(searchParams.get('checkIn') || '');
@@ -41,16 +41,16 @@ const HotelListPage: React.FC = () => {
     setSearchParams(newParams);
   };
 
-  // Filter hotels based on location/name.
-  // NOTE: Date and guest count filtering is not implemented as mock data does not support it.
+ 
+ 
   const filteredHotels = mockHotels.filter((hotel) => {
     const locationMatch =
       location.trim() === '' ||
       hotel.name.toLowerCase().includes(location.toLowerCase()) ||
       hotel.location.toLowerCase().includes(location.toLowerCase());
 
-    // In a real application, you would also filter by date and guest count.
-    // For this mock setup, we only filter by location.
+ 
+ 
     return locationMatch;
   });
 

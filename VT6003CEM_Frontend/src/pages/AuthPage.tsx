@@ -38,6 +38,7 @@ const AuthPage: React.FC = () => {
     username: '',
     email: '',
     password: '',
+    confirmPassword: '',
     firstname: '',
     lastname: '',
     operatorCode: ''
@@ -79,12 +80,16 @@ const AuthPage: React.FC = () => {
       if (formData.password.length < 6) {
         errors.password = 'Password must be at least 6 characters long';
       }
+      if (!formData.confirmPassword) {
+        errors.confirmPassword = 'Please confirm your password';
+      } else if (formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+      }
       if (isOperator && !formData.operatorCode.trim()) {
         errors.operatorCode = 'Operator code is required';
       }
     } else {
-      // Login validation
-      if (formData.password.length < 8) { // Login still requires 8 chars as per backend
+      if (formData.password.length < 8) {
         errors.password = 'Password must be at least 8 characters long';
       }
     }
@@ -115,6 +120,7 @@ const AuthPage: React.FC = () => {
         };
         
         await authService.login(loginData);
+        window.dispatchEvent(new Event('authChange'));
         navigate('/');
       } else {
         const userData: SignupData = {
@@ -133,7 +139,7 @@ const AuthPage: React.FC = () => {
           setError('Registration successful! You can now sign in.');
           setIsLogin(true);
         } catch (err: any) {
-          // Parse backend field errors if present
+ 
           try {
             const parsed = JSON.parse(err.message);
             setError(parsed.message);
@@ -193,10 +199,17 @@ const AuthPage: React.FC = () => {
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      password: e.target.value
-    }));
+    setFormData({ ...formData, password: e.target.value });
+    if (validationErrors.password) {
+      setValidationErrors({ ...validationErrors, password: '' });
+    }
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, confirmPassword: e.target.value });
+    if (validationErrors.confirmPassword) {
+      setValidationErrors({ ...validationErrors, confirmPassword: '' });
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -234,10 +247,7 @@ const AuthPage: React.FC = () => {
 
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
-            {/* Name fields - only shown on signup */}
 
-
-            {/* Email field - shown for both login and signup */}
             <TextField
               margin="normal"
               required
@@ -251,8 +261,25 @@ const AuthPage: React.FC = () => {
               error={!!validationErrors.email}
               helperText={validationErrors.email}
             />
+
+            {!isLogin && (
+              <>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="username"
+                  label="Username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleUsernameChange}
+                  error={!!validationErrors.username}
+                  helperText={validationErrors.username}
+                />
+              </>
+            )}
             
-            {/* Password field */}
+            
             <TextField
               margin="normal"
               required
@@ -280,29 +307,25 @@ const AuthPage: React.FC = () => {
                 ),
               }}
             />
-
-
-            {error && (
-              <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-                {error}
-              </Alert>
+            
+            {!isLogin && (
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="confirmPassword"
+                label="Confirm Password"
+                type={showPassword ? 'text' : 'password'}
+                id="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                error={!!validationErrors.confirmPassword}
+                helperText={validationErrors.confirmPassword}
+              />
             )}
             
-            {/* Registration-only fields: username, firstname, lastname */}
             {!isLogin && (
               <>
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="username"
-                  label="Username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleUsernameChange}
-                  error={!!validationErrors.username}
-                  helperText={validationErrors.username}
-                />
                 <TextField
                   margin="normal"
                   required
@@ -341,7 +364,6 @@ const AuthPage: React.FC = () => {
               </>
             )}
 
-            {/* Operator code field - only shown on signup when operator is checked */}
             {!isLogin && isOperator && (
               <TextField
                 margin="normal"
@@ -358,6 +380,12 @@ const AuthPage: React.FC = () => {
               />
             )}
 
+{error && (
+              <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
             <Button
               type="submit"
               fullWidth
@@ -369,16 +397,12 @@ const AuthPage: React.FC = () => {
               {isLoading ? <CircularProgress size={24} /> : isLogin ? 'Sign In' : 'Sign Up'}
             </Button>
 
-            
-
-            
-            {/* Google Sign-In (always show on sign-in tab) */}
             {isLogin && (
               <Box sx={{ textAlign: 'center', mb: 2 }}>
                 <Divider sx={{ my: 3 }}>
                   <Typography variant="body2" color="text.secondary">OR</Typography>
                 </Divider>
-                {/* <GoogleLogin
+                <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   useOneTap
@@ -389,17 +413,16 @@ const AuthPage: React.FC = () => {
                   type="standard"
                   theme="outline"
                   logo_alignment="left"
-                /> */}
+                />
               </Box>
             )}
 
-            {/* Google Sign-Up (hide if operator is selected) */}
             {!isLogin && !isOperator && (
               <Box sx={{ textAlign: 'center', mb: 2 }}>
                 <Divider sx={{ my: 3 }}>
                   <Typography variant="body2" color="text.secondary">OR</Typography>
                 </Divider>
-                {/* <GoogleLogin
+                <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   useOneTap
@@ -410,7 +433,7 @@ const AuthPage: React.FC = () => {
                   type="standard"
                   theme="outline"
                   logo_alignment="left"
-                /> */}
+                />
               </Box>
             )}
           </Box>
