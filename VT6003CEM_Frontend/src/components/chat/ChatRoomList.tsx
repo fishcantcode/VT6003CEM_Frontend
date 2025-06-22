@@ -23,7 +23,9 @@ const ChatRoomList: React.FC<ChatRoomListProps> = ({ currentUserId }) => {
         const rooms = authService.isOperator()
           ? await getAllChatRooms()
           : await getChatRoomsForCurrentUser();
-        setChatRooms(rooms);
+        // Filter out rooms where the associated hotel might have been deleted
+        const validRooms = rooms.filter(room => room.hotel);
+        setChatRooms(validRooms);
       } catch (e) {
         setError('Failed to load chat rooms.');
         console.error(e);
