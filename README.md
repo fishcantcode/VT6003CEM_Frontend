@@ -20,7 +20,7 @@ A modern frontend application built with React and TypeScript. This project serv
 
 1. Clone the repository:
    ```bash
-   git clone [your-repository-url]
+   git clone https://github.com/fishcantcode/VT6003CEM_Frontend.git
    cd VT6003CEM_Frontend
    ```
 
