@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, ListItem, ListItemButton, ListItemAvatar, Avatar, ListItemText, Typography, Box, Paper, CircularProgress, Alert, IconButton } from '@mui/material';
+import { List, ListItem, ListItemButton, Avatar, AvatarGroup, ListItemText, Typography, Paper, CircularProgress, Alert, IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getChatRoomsForCurrentUser, getAllChatRooms, closeChatRoom as deleteChatRoom } from '../../api/chatService';
 import { authService } from '../../api/authService';
-import type { ChatRoom } from '../../types/chat';
+import type { ChatRoom, UserInfo } from '../../types/chat';
 
 interface ChatRoomListProps {
-  currentUserId: string;
+  currentUserId: number | undefined;
 }
 
 const ChatRoomList: React.FC<ChatRoomListProps> = ({ currentUserId }) => {
@@ -33,7 +33,6 @@ const ChatRoomList: React.FC<ChatRoomListProps> = ({ currentUserId }) => {
     };
 
     fetchRooms();
-    // Re-fetch on auth changes (login/logout) so inbox stays current
     window.addEventListener('authChange', fetchRooms);
     return () => window.removeEventListener('authChange', fetchRooms);
   }, []);
@@ -71,9 +70,7 @@ const ChatRoomList: React.FC<ChatRoomListProps> = ({ currentUserId }) => {
       ) : (
         <List>
           {chatRooms.map((room) => {
-            const otherParticipant = room.participants.find(p => p.id !== currentUserId);
-            const lastMessage = room.messages[room.messages.length - 1];
-
+            const otherParticipants = room.participants.filter(p => p.id !== currentUserId);
             return (
               <ListItem
                 key={room.id}
@@ -91,24 +88,20 @@ const ChatRoomList: React.FC<ChatRoomListProps> = ({ currentUserId }) => {
                   onClick={() => handleRoomClick(room.id)}
                   sx={{ borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
                 >
-                  <ListItemAvatar>
-                    <Avatar src={otherParticipant?.avatarUrl} />
-                  </ListItemAvatar>
+                  <AvatarGroup max={4} sx={{ pr: 2 }}>
+                    {otherParticipants.map((p: UserInfo) => (
+                      <Avatar key={p.id} alt={p.username} src={p.avatarImage} />
+                    ))}
+                  </AvatarGroup>
                   <ListItemText
-                    primary={
-                      <Typography variant="subtitle1" noWrap>
-                        {otherParticipant?.name || 'Unknown User'}
-                      </Typography>
-                    }
+                    primary={room.hotel.name}
                     secondary={
-                      <Box>
-                        <Typography variant="body2" color="text.secondary" noWrap sx={{ fontWeight: 'bold' }}>
-                          {room.hotel.name}
+                      <>
+                        <Typography component="span" variant="body2" color="text.primary">
+                          {otherParticipants.map(p => p.username).join(', ')}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" noWrap>
-                          {lastMessage?.content || 'No messages yet'}
-                        </Typography>
-                      </Box>
+                        {` — ${room.messages[0]?.content || 'No messages yet'}`}
+                      </>
                     }
                   />
                   <Typography variant="caption" color="text.secondary">

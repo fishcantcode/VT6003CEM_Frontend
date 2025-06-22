@@ -20,25 +20,17 @@ export const getChatRoomById = async (chatRoomId: string): Promise<ChatRoom> => 
   return response.data;
 };
 
-export const sendMessage = async (chatRoomId: string, content: string): Promise<Message> => {
-  const response = await axios.post(`${API_BASE}/${chatRoomId}/message`, { content }, { headers: authService.getAuthHeader() });
+export const sendMessage = async (chatRoomId: string, content: string, senderId: number): Promise<Message> => {
+  const response = await axios.post(`${API_BASE}/${chatRoomId}/message`, { content, senderId }, { headers: authService.getAuthHeader() });
   return response.data;
 };
 
-// Operator: fetch all chat rooms
 export const getAllChatRooms = async (): Promise<ChatRoom[]> => {
   const response = await axios.get(`${API_BASE}/all`, { headers: authService.getAuthHeader() });
   return response.data;
 };
 
-// Operator: close / delete a chat room
 export const closeChatRoom = async (chatRoomId: string): Promise<{ message: string }> => {
   const response = await axios.delete(`${API_BASE}/${chatRoomId}`, { headers: authService.getAuthHeader() });
   return response.data;
-};
-
-// Mark all messages in a chat room as read
-export const markMessagesAsRead = async (chatRoomId: string): Promise<void> => {
-  // POST /chat/:chatRoomId/read (adjust the endpoint as your backend expects)
-  await axios.post(`${API_BASE}/${chatRoomId}/read`, undefined, { headers: authService.getAuthHeader() });
 };

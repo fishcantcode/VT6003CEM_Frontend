@@ -5,7 +5,7 @@ import type { ChatMessage as ChatMessageType, UserInfo } from '../../types/chat'
 interface ChatMessageProps {
   message: ChatMessageType;
   isCurrentUser: boolean;
-  sender?: Pick<UserInfo, 'name' | 'avatarUrl'>;
+  sender?: Pick<UserInfo, 'avatarImage'>;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCurrentUser, sender }) => {
@@ -19,9 +19,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCurrentUser, sende
     >
       {!isCurrentUser && (
         <Avatar
-          src={sender?.avatarUrl}
+          src={sender?.avatarImage}
           sx={{ width: 32, height: 32, mr: 1 }}
-          alt={sender?.name}
         />
       )}
 
@@ -49,9 +48,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isCurrentUser, sende
 
       {isCurrentUser && (
         <Avatar
-          src={sender?.avatarUrl}
+          src={sender?.avatarImage}
           sx={{ width: 32, height: 32, ml: 1 }}
-          alt={sender?.name}
         />
       )}
     </Box>

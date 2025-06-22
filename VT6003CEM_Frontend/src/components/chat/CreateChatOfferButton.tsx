@@ -52,12 +52,17 @@ const CreateChatOfferButton: React.FC<CreateChatOfferButtonProps> = ({
     try {
       setLoading(true);
       setError(null);
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) {
+        setError("You must be logged in to create a chat.");
+        setLoading(false);
+        return;
+      }
       
       const chatRoom = await createChatRoomWithOffer(hotel.place_id);
-      // send the user's custom message if provided
       if (message.trim()) {
         try {
-          await sendMessage(chatRoom.id, message.trim());
+          await sendMessage(chatRoom.id, message.trim(), currentUser.id);
         } catch (err) {
           console.error('Failed to send initial message:', err);
         }

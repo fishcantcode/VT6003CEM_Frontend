@@ -3,10 +3,10 @@ import {
   Container, Typography, Box
 } from '@mui/material';
 import ChatRoomList from '../components/chat/ChatRoomList';
+import { authService } from '../api/authService';
 
 const InboxPage: React.FC = () => {
-  
-  const currentUserId = 'user-123';
+  const currentUserId = authService.getCurrentUser()?.id;
 
   return (
     <Container maxWidth="md">

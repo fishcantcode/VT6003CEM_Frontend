@@ -270,7 +270,19 @@ export const authService = {
       });
     } catch (error) {
       console.error('Failed to load avatar:', error);
-      return ''; // Return empty string on error
+      return ''; 
+    }
+  },
+
+  async getUserId(): Promise<{ id: number }> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/user/id`, {
+        headers: this.getAuthHeader(),
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Get user ID error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch user ID.');
     }
   },
 
@@ -288,7 +300,7 @@ export const authService = {
  
       const currentUser = this.getCurrentUser();
       if (currentUser) {
-        const avatarUrl = this.getOwnAvatarUrl() + `?${Date.now()}`; // cache busting
+        const avatarUrl = this.getOwnAvatarUrl() + `?${Date.now()}`; 
         const updatedUser = { ...currentUser, avatarImage: avatarUrl };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         window.dispatchEvent(new Event('authChange'));

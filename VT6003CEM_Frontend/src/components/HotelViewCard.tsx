@@ -35,12 +35,6 @@ const HotelViewCard: React.FC<HotelViewCardProps> = ({ hotel, userRole, isFavori
   const handleCreateOffer = async () => {
     try {
       const chatRoom = await createChatRoomWithOffer(hotel.place_id);
-  
-      try {
-        await sendMessage(chatRoom.id, `I am interested in making an offer for ${hotel.name}.`);
-      } catch (err) {
-        console.warn('Initial message skipped/failed:', err);
-      }
       navigate(`/chat/${chatRoom.id}`);
     } catch (err) {
       console.error('Failed to create chat room from ViewAllHotels:', err);

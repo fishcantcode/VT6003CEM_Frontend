@@ -1,17 +1,21 @@
 import type { HotelInfo } from './hotel';
 
 export interface UserInfo {
-  id: string; 
-  name: string;
-  avatarUrl?: string; 
+  id: number;
+  username: string;
+  email: string;
+  avatarImage?: string;
+  profile?: string;
+  role?: 'user' | 'operator';
 }
 
 export interface Message {
   id: string; 
   chatRoomId: string; 
-  senderId: string; 
+  senderId: number; 
   content: string;
-  timestamp: Date;
+  timestamp: string;
+  sender: UserInfo;
   status: 'sent' | 'delivered' | 'read';
 }
 
