@@ -29,7 +29,17 @@ A modern frontend application built with React and TypeScript. This project serv
    cd VT6003CEM_Frontend
    npm install
    ```
+3. Environment Setup
+Create a `.env` file in the root directory by copying the example:
+```bash
+cp .env.example .env
+```
 
+Edit the `.env` file with your preferred settings:
+```
+VITE_GOOGLE_PLACES_API_KEY = your-google-place-api-key
+API_BASE_URL = 'http://localhost:3000/api';
+```
 ### Development
 
 To start the development server:
