@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 import { GoogleLogin } from '@react-oauth/google';
 import type { CredentialResponse } from '@react-oauth/google';
-import { authService, type SignupData } from '../api/authService';
+import { authService, type SignupData, type LoginData } from '../api/authService';
 import { useNavigate } from 'react-router-dom';
 
 const AuthPage: React.FC = () => {
@@ -31,12 +31,15 @@ const AuthPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
+    username: '',
     email: '',
     password: '',
-    name: '',
+    firstname: '',
+    lastname: '',
     operatorCode: ''
   });
 
@@ -60,40 +63,103 @@ const AuthPage: React.FC = () => {
     setError('Google authentication failed. Please try again.');
   };
 
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!isLogin) {
+      if (!formData.username || formData.username.length < 3) {
+        errors.username = 'Username must be at least 3 characters long';
+      }
+      if (!formData.firstname) {
+        errors.firstname = 'First name is required';
+      }
+      if (!formData.lastname) {
+        errors.lastname = 'Last name is required';
+      }
+      if (formData.password.length < 6) {
+        errors.password = 'Password must be at least 6 characters long';
+      }
+      if (isOperator && !formData.operatorCode.trim()) {
+        errors.operatorCode = 'Operator code is required';
+      }
+    } else {
+      // Login validation
+      if (formData.password.length < 8) { // Login still requires 8 chars as per backend
+        errors.password = 'Password must be at least 8 characters long';
+      }
+    }
+
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
     
     try {
       if (isLogin) {
-        console.log('Login attempt with:', { email: formData.email });
+        const loginData: LoginData = {
+          email: formData.email,
+          password: formData.password
+        };
+        
+        await authService.login(loginData);
         navigate('/');
       } else {
         const userData: SignupData = {
-          name: formData.name,
-          email: formData.email,
+          username: formData.username.trim(),
+          email: formData.email.trim(),
           password: formData.password,
+          firstname: formData.firstname.trim(),
+          lastname: formData.lastname.trim(),
           isOperator: isOperator,
-          ...(isOperator && { operatorCode: formData.operatorCode })
         };
-        
-        await authService.signup(userData);
-        navigate('/');
+        if (isOperator) {
+          userData.operatorCode = formData.operatorCode.trim();
+        }
+        try {
+          await authService.register(userData);
+          setError('Registration successful! You can now sign in.');
+          setIsLogin(true);
+        } catch (err: any) {
+          // Parse backend field errors if present
+          try {
+            const parsed = JSON.parse(err.message);
+            setError(parsed.message);
+            if (parsed.errors) {
+              const backendFieldErrors: Record<string, string> = {};
+              parsed.errors.forEach((e: any) => {
+                if (e.path && e.message) {
+                  backendFieldErrors[e.path[0]] = e.message;
+                }
+              });
+              setValidationErrors(backendFieldErrors);
+            }
+          } catch {
+            setError(err.message || 'Registration failed.');
+          }
+        }
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || 'An error occurred. Please try again.');
+      setError(error.message || 'An error occurred. Please try again.');
+      console.error('Authentication error:', error);
     } finally {
       setIsLoading(false);
     }
   };
   
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      name: e.target.value
-    }));
-  };
+
 
   const handleOperatorCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -101,7 +167,24 @@ const AuthPage: React.FC = () => {
       operatorCode: e.target.value
     }));
   };
-
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      username: e.target.value
+    }));
+  };
+  const handleFirstnameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      firstname: e.target.value
+    }));
+  };
+  const handleLastnameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      lastname: e.target.value
+    }));
+  };
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -151,37 +234,10 @@ const AuthPage: React.FC = () => {
 
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
-            {!isLogin && (
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="name"
-                label="Full Name"
-                name="name"
-                autoComplete="name"
-                autoFocus={!isLogin}
-                value={formData.name}
-                onChange={handleNameChange}
-                sx={{ mb: 2 }}
-              />
-            )}
-            
-            {!isLogin && isOperator && (
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="operatorCode"
-                label="Operator Code"
-                name="operatorCode"
-                type="password"
-                value={formData.operatorCode}
-                onChange={handleOperatorCodeChange}
-                sx={{ mb: 2 }}
-              />
-            )}
-            
+            {/* Name fields - only shown on signup */}
+
+
+            {/* Email field - shown for both login and signup */}
             <TextField
               margin="normal"
               required
@@ -192,9 +248,11 @@ const AuthPage: React.FC = () => {
               autoComplete="email"
               value={formData.email}
               onChange={handleEmailChange}
-              sx={{ mb: 2 }}
+              error={!!validationErrors.email}
+              helperText={validationErrors.email}
             />
             
+            {/* Password field */}
             <TextField
               margin="normal"
               required
@@ -206,6 +264,8 @@ const AuthPage: React.FC = () => {
               autoComplete="new-password"
               value={formData.password}
               onChange={handlePasswordChange}
+              error={!!validationErrors.password}
+              helperText={validationErrors.password}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -228,17 +288,73 @@ const AuthPage: React.FC = () => {
               </Alert>
             )}
             
+            {/* Registration-only fields: username, firstname, lastname */}
             {!isLogin && (
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={isOperator}
-                    onChange={(e) => setIsOperator(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label="I am an operator"
-                sx={{ mt: 1, mb: 2 }}
+              <>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="username"
+                  label="Username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleUsernameChange}
+                  error={!!validationErrors.username}
+                  helperText={validationErrors.username}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="firstname"
+                  label="First Name"
+                  name="firstname"
+                  value={formData.firstname}
+                  onChange={handleFirstnameChange}
+                  error={!!validationErrors.firstname}
+                  helperText={validationErrors.firstname}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="lastname"
+                  label="Last Name"
+                  name="lastname"
+                  value={formData.lastname}
+                  onChange={handleLastnameChange}
+                  error={!!validationErrors.lastname}
+                  helperText={validationErrors.lastname}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={isOperator}
+                      onChange={(e) => setIsOperator(e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="I am an operator"
+                  sx={{ mt: 1, mb: 2 }}
+                />
+              </>
+            )}
+
+            {/* Operator code field - only shown on signup when operator is checked */}
+            {!isLogin && isOperator && (
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="operatorCode"
+                label="Operator Code"
+                name="operatorCode"
+                type="password"
+                value={formData.operatorCode}
+                onChange={handleOperatorCodeChange}
+                error={!!validationErrors.operatorCode}
+                helperText={validationErrors.operatorCode}
               />
             )}
 
@@ -262,7 +378,7 @@ const AuthPage: React.FC = () => {
                 <Divider sx={{ my: 3 }}>
                   <Typography variant="body2" color="text.secondary">OR</Typography>
                 </Divider>
-                <GoogleLogin
+                {/* <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   useOneTap
@@ -273,7 +389,7 @@ const AuthPage: React.FC = () => {
                   type="standard"
                   theme="outline"
                   logo_alignment="left"
-                />
+                /> */}
               </Box>
             )}
 
@@ -283,7 +399,7 @@ const AuthPage: React.FC = () => {
                 <Divider sx={{ my: 3 }}>
                   <Typography variant="body2" color="text.secondary">OR</Typography>
                 </Divider>
-                <GoogleLogin
+                {/* <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   useOneTap
@@ -294,7 +410,7 @@ const AuthPage: React.FC = () => {
                   type="standard"
                   theme="outline"
                   logo_alignment="left"
-                />
+                /> */}
               </Box>
             )}
           </Box>

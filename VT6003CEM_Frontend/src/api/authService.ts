@@ -1,22 +1,232 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3001/api'; 
+const API_BASE_URL = 'http://localhost:3000/api';
 
-export interface SignupData {
-  name: string;
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export interface LoginData {
   email: string;
   password: string;
+}
+
+export interface SignupData {
+  username: string;
+  email: string;
+  password: string;
+  firstname: string;
+  lastname: string;
   isOperator: boolean;
-  operatorCode?: string; 
+  operatorCode?: string;
+}
+
+interface RegisterPayload {
+  username: string;
+  email: string;
+  password: string;
+  firstname: string;
+  lastname: string;
+  operatorCode?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    profile: {
+      firstName: string;
+      lastName: string;
+      bio?: string;
+    };
+    role: 'user' | 'operator';
+    isEmployee: boolean;
+    avatarImage?: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+export interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  profile: {
+    firstName: string;
+    lastName: string;
+    bio?: string;
+  };
+  role: 'user' | 'operator';
+  isEmployee: boolean;
+  avatarImage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateProfilePayload {
+  profile: {
+    firstName?: string;
+    lastName?: string;
+    bio?: string;
+  };
+}
+
+export interface AvatarUploadPayload {
+  avatar: File;
 }
 
 export const authService = {
-  async signup(userData: SignupData) {
-    const response = await axios.post(`${API_BASE_URL}/auth/signup`, userData, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return response.data;
+  async login(loginData: LoginData): Promise<AuthResponse> {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+        email: loginData.email,
+        password: loginData.password
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Login successful, received data:', response.data);
+
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        console.log('Token stored in localStorage:', response.data.token);
+        window.dispatchEvent(new Event('authChange'));
+      } else {
+        console.error('Login response did not contain a token.');
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Login error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Login failed. Please try again.');
+    }
+  },
+
+  async register(userData: SignupData): Promise<AuthResponse> {
+    try {
+      const registerPayload: RegisterPayload = {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        firstname: userData.firstname,
+        lastname: userData.lastname,
+      };
+      if (userData.isOperator && userData.operatorCode) {
+        registerPayload.operatorCode = userData.operatorCode;
+      }
+      const response = await axios.post(`${API_BASE_URL}/auth/register`, registerPayload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        window.dispatchEvent(new Event('authChange'));
+      }
+      return response.data;
+    } catch (error: any) {
+      // Surface backend field errors if present
+      if (error.response?.data?.errors) {
+        const fieldErrors = error.response.data.errors;
+        throw new Error(JSON.stringify({
+          message: error.response.data.message || 'Invalid input.',
+          errors: fieldErrors
+        }));
+      }
+      throw new Error(
+        error.response?.data?.message || 
+        error.response?.data?.error || 
+        'Registration failed. Please try again.'
+      );
+    }
+  },
+
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.dispatchEvent(new Event('authChange'));
+  },
+
+  getCurrentUser() {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  },
+
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem('token');
+  },
+
+  isOperator(): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === 'operator';
+  },
+
+  getAuthHeader() {
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  },
+
+  async getUserProfile(): Promise<UserProfile> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/user/profile`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Get user profile error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch user profile.');
+    }
+  },
+
+  async updateUserProfile(payload: UpdateProfilePayload): Promise<UserProfile> {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/user/profile`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Update user in localStorage with new data
+      const updatedUser = response.data.user;
+      const currentUser = this.getCurrentUser();
+      const mergedUser = { ...currentUser, ...updatedUser };
+      localStorage.setItem('user', JSON.stringify(mergedUser));
+      window.dispatchEvent(new Event('authChange'));
+
+      return updatedUser;
+    } catch (error: any) {
+      console.error('Update user profile error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to update user profile.');
+    }
+  },
+
+  async uploadAvatar(file: File): Promise<{ message: string }> {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await axios.post(`${API_BASE_URL}/user/avatar`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Avatar upload error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to upload avatar.');
+    }
   },
 };
