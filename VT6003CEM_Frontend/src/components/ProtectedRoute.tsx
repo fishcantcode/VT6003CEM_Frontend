@@ -1,31 +1,31 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { CircularProgress, Box } from '@mui/material';
 
 interface ProtectedRouteProps {
-  allowedRoles: string[];
+  allowedRoles: Array<'user' | 'operator'>;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
-  const storedUser = localStorage.getItem('user');
-  
-  if (!storedUser) {
-  
+  const { isAuthenticated, role, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
 
-  try {
-    const user = JSON.parse(storedUser);
-    if (user && user.role && allowedRoles.includes(user.role)) {
-  
-      return <Outlet />;
-    } else {
-  
-      return <Navigate to="/" replace />;
-    }
-  } catch (error) {
-    console.error('Failed to parse user from localStorage', error);
-  
-    return <Navigate to="/auth" replace />;
+  if (role && allowedRoles.includes(role)) {
+    return <Outlet />;
+  } else {
+    return <Navigate to="/" replace />;
   }
 };
 

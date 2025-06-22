@@ -12,6 +12,7 @@ import InboxPage from './pages/InboxPage';
 import HotelListPage from './pages/HotelListPage'; // Import the new page
 import ViewAllHotelsPage from './pages/ViewAllHotelsPage';
 import MyFavoritesPage from './pages/MyFavoritesPage';
+import ChatPage from './pages/ChatPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -57,15 +58,16 @@ function App() {
                 <Route path="/hotels" element={<HotelListPage />} />
 
                 {/* Protected Routes */}
-                <Route path="/" element={<ProtectedRoute allowedRoles={['user', 'operator']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['user', 'operator']} />}>
                   <Route path="/inbox" element={<InboxPage />} />
+                  <Route path="/chat/:id" element={<ChatPage />} />
                 </Route>
 
-                <Route path="/" element={<ProtectedRoute allowedRoles={['user']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['user']} />}>
                   <Route path="/my-favorites" element={<MyFavoritesPage />} />
                 </Route>
 
-                <Route path="/" element={<ProtectedRoute allowedRoles={['operator']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['operator']} />}>
                   <Route path="/operator" element={<OperatorPage />} />
                 </Route>
               </Routes>

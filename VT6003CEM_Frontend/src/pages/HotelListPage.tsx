@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -15,11 +15,13 @@ import {
 import { LocationOn, People, Search as SearchIcon } from '@mui/icons-material';
 import HotelCard from '../components/HotelCard';
 import { getGoogleLocation } from '../services/googleLocationService';
+import { createChatRoomWithOffer, sendMessage } from '../api/chatService';
 import type { HotelInfo } from '../types/hotel';
 import { updateHotel } from '../api/hotelServices';
 
 const HotelListPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [location, setLocation] = useState(searchParams.get('search') || 'Hong Kong Hyatt hotel');
   const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') || '');
@@ -85,6 +87,15 @@ const HotelListPage: React.FC = () => {
     setSearchParams(newParams);
     
     handleSearch();
+  };
+
+  const handleCreateOffer = async (hotel: HotelInfo) => {
+    try {
+      const newChatRoom = await createChatRoomWithOffer(hotel.place_id);
+      navigate(`/chat/${newChatRoom.id}`);
+    } catch (e) {
+      console.error('Failed to create chat room:', e);
+    }
   };
 
   return (
@@ -183,7 +194,7 @@ const HotelListPage: React.FC = () => {
                 key={hotel.place_id}
                 sx={{ p: 1, width: { xs: '100%', sm: '50%', md: '33.333%' } }}
               >
-                <HotelCard hotel={hotel} />
+                <HotelCard hotel={hotel} onCreateOffer={handleCreateOffer} />
               </Box>
             ))
           ) : (

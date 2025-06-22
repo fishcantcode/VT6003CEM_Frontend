@@ -12,6 +12,7 @@ import { Favorite, FavoriteBorder } from '@mui/icons-material';
 import type { HotelInfo } from '../types/hotel';
 import hotelImage from '../assets/hotel.jpg';
 import { useNavigate } from 'react-router-dom';
+import { createChatRoomWithOffer, sendMessage } from '../api/chatService';
 
 interface HotelViewCardProps {
   hotel: HotelInfo;
@@ -31,8 +32,19 @@ const HotelViewCard: React.FC<HotelViewCardProps> = ({ hotel, userRole, isFavori
     }
   };
 
-  const handleCreateOffer = () => {
-    navigate('/inbox', { state: { hotelName: hotel.name, hotelPlaceId: hotel.place_id } });
+  const handleCreateOffer = async () => {
+    try {
+      const chatRoom = await createChatRoomWithOffer(hotel.place_id);
+  
+      try {
+        await sendMessage(chatRoom.id, `I am interested in making an offer for ${hotel.name}.`);
+      } catch (err) {
+        console.warn('Initial message skipped/failed:', err);
+      }
+      navigate(`/chat/${chatRoom.id}`);
+    } catch (err) {
+      console.error('Failed to create chat room from ViewAllHotels:', err);
+    }
   };
 
   return (
